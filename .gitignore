@@ -1,0 +1,12 @@
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.idea/
+.vscode/
+.env
+runs/
+eval_tmp/
+*.pt
+*.bin
+*.safetensors
+predictions*.csv

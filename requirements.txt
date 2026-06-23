@@ -1,0 +1,10 @@
+accelerate>=1.2,<2
+bitsandbytes>=0.45
+numpy>=1.26,<3
+pandas>=2.2,<3
+peft>=0.14,<1
+protobuf==5.29.5
+scikit-learn>=1.5,<2
+tensorboard>=2.17,<3
+torch>=2.3
+transformers>=4.52,<5

@@ -20,11 +20,11 @@ The default objective is mean squared error between the prediction and the norma
 ## Project structure
 
 ```text
-llama_for_npdp/       LLaMA model implementation
-qwen_for_npdp/        Qwen2 model implementation
-glm_for_npdp/         GLM model implementation
-mistral_for_npdp/     Mistral model implementation
-baichuan_for_npdp/    Baichuan remote-code wrapper
+llama_for_npdp/       LLaMA model, fine-tuning, and testing
+qwen_for_npdp/        Qwen2 model, fine-tuning, and testing
+glm_for_npdp/         GLM model, fine-tuning, and testing
+mistral_for_npdp/     Mistral model, fine-tuning, and testing
+baichuan_for_npdp/    Baichuan model, fine-tuning, and testing
 npdp_model_utils.py   shared head, pooling, activation, and loss
 npdp_dataset.py       shared patent CSV dataset
 npdp_registry.py      model registry and loading rules
@@ -58,7 +58,7 @@ Install a CUDA-compatible PyTorch build before enabling 4-bit or 8-bit quantizat
 Qwen example:
 
 ```bash
-python qwen_finetune.py \
+python -m qwen_for_npdp.finetune \
   --checkpoint Qwen/Qwen2.5-7B \
   --data_path data/patents_train.csv \
   --label_column target \
@@ -69,10 +69,10 @@ python qwen_finetune.py \
 The other entry points are:
 
 ```text
-llama_finetune.py
-glm_finetune.py
-mistral_finetune.py
-baichuan_finetune.py
+python -m llama_for_npdp.finetune
+python -m glm_for_npdp.finetune
+python -m mistral_for_npdp.finetune
+python -m baichuan_for_npdp.finetune
 ```
 
 For Baichuan, the registry defaults to the fused attention projection `W_pack`. Override `--target_modules` if the chosen checkpoint uses different module names.
@@ -80,7 +80,7 @@ For Baichuan, the registry defaults to the fused attention projection `W_pack`. 
 ## Evaluation
 
 ```bash
-python qwen_test.py \
+python -m qwen_for_npdp.test \
   --checkpoint Qwen/Qwen2.5-7B \
   --model_path runs/qwen/<run>/last \
   --data_path data/patents_test.csv \

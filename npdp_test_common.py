@@ -13,7 +13,7 @@ from peft import PeftModel
 from transformers import AutoTokenizer, DataCollatorWithPadding, Trainer, TrainingArguments
 
 from npdp_dataset import DEFAULT_PROMPT, NPDPPatentDataset
-from npdp_finetune_common import compute_metrics
+from npdp_finetune_common import make_compute_metrics
 from npdp_model_utils import configure_npdp
 from npdp_registry import get_model_entry, load_base_model, load_config
 
@@ -35,6 +35,7 @@ def parse_args(model_type):
     parser.add_argument("--data_path", required=True)
     parser.add_argument("--output_csv", default=None)
     parser.add_argument("--batch_size", type=int, default=8)
+    parser.add_argument("--ndcg_k", type=int, default=20)
     parser.add_argument("--fp16", action="store_true")
     parser.add_argument("--bf16", action="store_true")
     return parser.parse_args()
@@ -85,7 +86,7 @@ def main(model_type: str):
             remove_unused_columns=False,
         ),
         data_collator=DataCollatorWithPadding(tokenizer=tokenizer, pad_to_multiple_of=8),
-        compute_metrics=compute_metrics,
+        compute_metrics=make_compute_metrics(args.ndcg_k),
     )
     result = trainer.predict(dataset)
     print(result.metrics)

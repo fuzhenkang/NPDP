@@ -120,8 +120,9 @@ python -m qwen_for_npdp.test \
   --checkpoint Qwen/Qwen2.5-7B \
   --model_path runs/qwen/<run>/last \
   --data_path data/patents_test.csv \
+  --ndcg_k 50 \
   --output_csv predictions.csv \
   --bf16
 ```
 
-The reported metrics are MSE, MAE, and NDCG@20 by default. Use `--ndcg_k 50` during training when you want validation metrics such as `eval_ndcg@50`. Model outputs already contain the activated 0-1 prediction, so evaluation must not apply a second sigmoid.
+The reported metrics are MSE, MAE, and NDCG@20 by default. Use `--ndcg_k 50` during training or testing when you want metrics such as `eval_ndcg@50` or `test_ndcg@50`. Model outputs already contain the activated 0-1 prediction, so evaluation must not apply a second sigmoid.

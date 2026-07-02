@@ -77,6 +77,42 @@ python -m baichuan_for_npdp.finetune
 
 For Baichuan, the registry defaults to the fused attention projection `W_pack`. Override `--target_modules` if the chosen checkpoint uses different module names.
 
+## Optuna hyperparameter search
+
+The unified Optuna entry point can search hyperparameters for all supported backbones:
+
+```bash
+python npdp_optuna_search.py \
+  --model_type qwen \
+  --checkpoint Qwen/Qwen2.5-7B \
+  --data_path data/patents_train.csv \
+  --runs_dir runs/qwen_optuna \
+  --n_trials 10 \
+  --epochs 1 \
+  --metric eval_mse \
+  --load_in_4bit \
+  --bf16
+```
+
+To optimize ranking quality with NDCG@50, use:
+
+```bash
+python npdp_optuna_search.py \
+  --model_type qwen \
+  --checkpoint Qwen/Qwen2.5-7B \
+  --data_path data/patents_train.csv \
+  --runs_dir runs/qwen_optuna_ndcg50 \
+  --n_trials 10 \
+  --epochs 1 \
+  --ndcg_k 50 \
+  --metric eval_ndcg@50 \
+  --direction maximize \
+  --load_in_4bit \
+  --bf16
+```
+
+The script writes each trial to `trial_000`, `trial_001`, and so on. The best result is summarized in `optuna_best_trial.json`.
+
 ## Evaluation
 
 ```bash
@@ -88,4 +124,4 @@ python -m qwen_for_npdp.test \
   --bf16
 ```
 
-The reported metrics are MSE, MAE, and NDCG@20. Model outputs already contain the activated 0-1 prediction, so evaluation must not apply a second sigmoid.
+The reported metrics are MSE, MAE, and NDCG@20 by default. Use `--ndcg_k 50` during training when you want validation metrics such as `eval_ndcg@50`. Model outputs already contain the activated 0-1 prediction, so evaluation must not apply a second sigmoid.

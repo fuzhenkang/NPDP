@@ -30,6 +30,21 @@ from npdp_model_utils import ACTIVATION_CHOICES, LOSS_CHOICES, configure_npdp
 from npdp_registry import get_model_entry, load_base_model, load_config
 
 
+def make_compute_metrics(ndcg_k: int = 20):
+    def compute_metrics(eval_prediction):
+        predictions, labels = eval_prediction
+        predictions = torch.as_tensor(predictions).squeeze()
+        labels = torch.as_tensor(labels).squeeze()
+        mse = nn.MSELoss()(predictions, labels).item()
+        mae = nn.L1Loss()(predictions, labels).item()
+        ndcg = -1.0
+        if predictions.numel() >= ndcg_k:
+            ndcg = float(ndcg_score([labels.numpy()], [predictions.numpy()], k=ndcg_k))
+        return {"mse": mse, "mae": mae, f"ndcg@{ndcg_k}": ndcg}
+
+    return compute_metrics
+
+
 def compute_metrics(eval_prediction):
     predictions, labels = eval_prediction
     predictions = torch.as_tensor(predictions).squeeze()
@@ -66,6 +81,7 @@ def parse_args(model_type: str):
     parser.add_argument("--learning_rate", type=float, default=1e-4)
     parser.add_argument("--weight_decay", type=float, default=1e-2)
     parser.add_argument("--warmup_ratio", type=float, default=0.1)
+    parser.add_argument("--ndcg_k", type=int, default=20)
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--fp16", action="store_true")
     parser.add_argument("--bf16", action="store_true")
@@ -78,8 +94,7 @@ def parse_args(model_type: str):
     return parser.parse_args()
 
 
-def main(model_type: str):
-    args = parse_args(model_type)
+def train_npdp(model_type: str, args):
     set_seed(args.seed)
     if args.runs_dir is None:
         args.runs_dir = os.path.join("runs", model_type, datetime.now().strftime("%Y%m%d-%H%M%S"))
@@ -178,11 +193,22 @@ def main(model_type: str):
         train_dataset=train_dataset,
         eval_dataset=validation_dataset,
         data_collator=DataCollatorWithPadding(tokenizer=tokenizer, pad_to_multiple_of=8),
-        compute_metrics=compute_metrics,
+        compute_metrics=make_compute_metrics(args.ndcg_k),
     )
-    trainer.train()
+    train_result = trainer.train()
+    eval_metrics = trainer.evaluate()
     output_dir = os.path.join(args.runs_dir, "last")
     trainer.save_model(output_dir)
     tokenizer.save_pretrained(output_dir)
     save_json(vars(args), os.path.join(output_dir, "args.json"))
     print(f"Saved NPDP model to {output_dir}")
+    return {
+        "output_dir": output_dir,
+        "train_metrics": train_result.metrics,
+        "eval_metrics": eval_metrics,
+    }
+
+
+def main(model_type: str):
+    args = parse_args(model_type)
+    return train_npdp(model_type, args)

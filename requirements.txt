@@ -1,6 +1,7 @@
 accelerate>=1.2,<2
 bitsandbytes>=0.45
 numpy>=1.26,<3
+optuna>=3.0,<5
 pandas>=2.2,<3
 peft>=0.14,<1
 protobuf==5.29.5
